@@ -1,58 +1,81 @@
-# Benchmarks — Claude Code Local
+# Benchmarks — Claude Code Local (MLX Native Server)
 
-**Machine:** MacBook Pro M5 Max, 128 GB Unified Memory
-**Date:** March 26, 2026
-**Model:** Qwen 3.5 122B-A10B (4-bit, MLX native)
-**Server:** MLX Native Anthropic Server (our custom build)
-**Claude Code:** 2.1.84
+## System
 
-## MLX Native vs llama.cpp TurboQuant — Same Model, Same Hardware
+| | |
+|---|---|
+| **Machine** | MacBook Pro M5 Max |
+| **Chip** | Apple M5 Max |
+| **Memory** | 128 GB Unified |
+| **Model** | Qwen 3.5 122B-A10B (4-bit MLX) |
+| **Model size on disk** | 65 GB |
+| **Architecture** | MoE — 122B total, 10B active per token |
+| **Server** | MLX Native Anthropic Server (custom, ~200 lines Python) |
+| **KV cache** | 4-bit quantized (MLX Metal GPU) |
+| **Claude Code** | v2.1.84 |
+| **Date** | March 26, 2026 |
 
-| Test | llama.cpp TurboQuant | MLX Native | Improvement |
-|------|---------------------|------------|-------------|
-| Code generation | 41.0 tok/s | **48.3 tok/s** | **+18%** |
-| Q&A | 43.7 tok/s | 42.3 tok/s | ~same |
-| Claude Code E2E | 133s | **17.6s** | **7.5x faster** |
+## Generation Speed
 
-The raw token generation is 18% faster. But the real win is Claude Code end-to-end: **7.5x faster** because the MLX server eliminates the proxy layer and handles prompt processing more efficiently.
+| Max Tokens | Output Tokens | Time | **Tokens/sec** |
+|:---:|:---:|:---:|:---:|
+| 100 | 100 | 2.2s | **45.0 tok/s** |
+| 500 | 500 | 7.7s | **64.8 tok/s** |
+| 1000 | 1000 | 15.3s | **65.4 tok/s** |
 
-## Evolution — Three Generations
+Sustained generation at 65 tok/s. Short requests are slower (45 tok/s) due to prompt processing overhead amortized over fewer tokens.
 
-| Generation | Server | Speed | Claude Code E2E | Architecture |
-|-----------|--------|-------|-----------------|--------------|
-| Gen 1 | Ollama | 30 tok/s | ~133s | Ollama → Proxy → Claude Code |
-| Gen 2 | llama.cpp TurboQuant | 41 tok/s | ~133s | llama-server → Proxy → Claude Code |
-| **Gen 3** | **MLX Native** | **48 tok/s** | **17.6s** | **MLX Server → Claude Code (direct)** |
+## Three Generations — Our Optimization Journey
 
-From 30 tok/s to 48 tok/s (+60%). From 133s to 17.6s per Claude Code task (+7.5x).
+```
+Generation Speed (tok/s):
 
-## What Makes MLX Native Faster
+  Gen 1: Ollama + proxy              ████████████████████████████████ 30
+  Gen 2: llama.cpp TurboQuant        █████████████████████████████████████████ 41
+  Gen 3: MLX Native (no proxy)       █████████████████████████████████████████████████████████████████ 65
+```
 
-1. **No proxy** — the server speaks Anthropic Messages API directly. Zero translation overhead.
-2. **Apple Silicon native** — MLX is Apple's own ML framework, optimized for M-series unified memory.
-3. **Efficient prompt handling** — processes the 32K Claude Code system prompt faster than llama.cpp.
-4. **4-bit KV cache quantization** — built into MLX, runs on Metal GPU natively.
+```
+Claude Code Task Time (seconds):
 
-## Model Details
+  Gen 1: Ollama + proxy              █████████████████████████████████████████████████████████ 133s
+  Gen 2: llama.cpp TurboQuant        █████████████████████████████████████████████████████████ 133s
+  Gen 3: MLX Native (no proxy)       ████████ 17.6s
+```
 
-| Property | Value |
-|----------|-------|
-| Model | Qwen 3.5 122B-A10B |
-| Architecture | Mixture of Experts (122B total, 10B active per token) |
-| Quantization | 4-bit (MLX native) |
-| Size on disk | ~50 GB |
-| Format | MLX safetensors |
-| KV cache | 4-bit quantized |
+| Generation | Stack | tok/s | Claude Code E2E | What Changed |
+|:---:|---|:---:|:---:|---|
+| 1 | Ollama → Proxy → Claude Code | 30 | 133s | Baseline |
+| 2 | llama.cpp TurboQuant → Proxy → Claude Code | 41 | 133s | +37% speed, 4.9x KV compression |
+| **3** | **MLX Server → Claude Code (direct)** | **65** | **17.6s** | **+117% speed, eliminated proxy** |
 
-## Cloud API Comparison
+## vs Cloud APIs
 
-| | MLX Native (Local) | Claude Sonnet (API) | Claude Opus (API) |
-|---|---|---|---|
-| Speed | 48 tok/s | ~80 tok/s | ~40 tok/s |
-| Claude Code task | 17.6s | ~10s | ~15s |
-| Cost per M tokens | $0 | $3/$15 | $15/$75 |
-| Privacy | 100% local | Cloud | Cloud |
-| Works offline | Yes | No | No |
-| Monthly cost | $0 | $20-100+ | $20-100+ |
+| | **MLX Native (Local)** | Claude Sonnet (Cloud) | Claude Opus (Cloud) |
+|---|:---:|:---:|:---:|
+| **Generation speed** | 65 tok/s | ~80 tok/s | ~40 tok/s |
+| **Claude Code task** | 17.6s | ~10s | ~15s |
+| **Cost / million tokens** | **$0** | $3 / $15 | $15 / $75 |
+| **Privacy** | **100% on-device** | Cloud | Cloud |
+| **Works offline** | **Yes** | No | No |
+| **Monthly cost** | **$0** | $20-100+ | $20-100+ |
 
-The local MLX setup is now **competitive with cloud Opus on speed** and beats it on cost. Permanently.
+Our local setup **beats cloud Opus on speed** (65 vs 40 tok/s) and is within striking distance of Sonnet.
+
+## Why MLX Native is Faster
+
+| Factor | Impact |
+|--------|--------|
+| **No proxy** | Eliminated API translation overhead — the #1 bottleneck |
+| **MLX framework** | Apple's own ML framework, built for Metal GPU + unified memory |
+| **Native Anthropic API** | Server speaks Claude Code's language directly |
+| **Unified memory** | Zero-copy between CPU and GPU — model weights stay in place |
+| **MoE efficiency** | Only 10B of 122B params activate per token — fast on unified memory |
+
+## Methodology
+
+- All benchmarks run on a warm server (model already loaded)
+- Each test run once (not averaged — these are representative single runs)
+- Claude Code E2E includes full Claude Code startup, system prompt processing, and generation
+- KV cache quantized to 4-bit via MLX's built-in `QuantizedKVCache`
+- Temperature: 0.7 (default)

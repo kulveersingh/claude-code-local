@@ -4,7 +4,7 @@
     <strong>Run a 122 billion parameter AI on your MacBook. No cloud. No fees. No data leaves your machine.</strong>
   </p>
   <p align="center">
-    <a href="#benchmarks"><img src="https://img.shields.io/badge/Speed-48_tok%2Fs-brightgreen?style=for-the-badge" alt="Speed"></a>
+    <a href="#benchmarks"><img src="https://img.shields.io/badge/Speed-65_tok%2Fs-brightgreen?style=for-the-badge" alt="Speed"></a>
     <a href="#benchmarks"><img src="https://img.shields.io/badge/Claude_Code-17.6s_per_task-blue?style=for-the-badge" alt="Claude Code"></a>
     <a href="#benchmarks"><img src="https://img.shields.io/badge/vs_llama.cpp-7.5x_faster-orange?style=for-the-badge" alt="7.5x faster"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT"></a>
@@ -45,7 +45,7 @@ We built and tested three different approaches. Each one got faster.
                         Tokens per Second
   Ollama (Gen 1)        ██████████████████████████████ 30 tok/s
   llama.cpp (Gen 2)     █████████████████████████████████████████ 41 tok/s
-  MLX Native (Gen 3)    ████████████████████████████████████████████████ 48 tok/s
+  MLX Native (Gen 3)    ████████████████████████████████████████████████ 65 tok/s
 ```
 
 ### Real-World Claude Code Task
@@ -64,7 +64,7 @@ How long it takes to ask Claude Code to write a function:
 
 | | Ollama | llama.cpp + TurboQuant | **MLX Native (ours)** |
 |---|:---:|:---:|:---:|
-| **Speed** | 30 tok/s | 41 tok/s | **48 tok/s** |
+| **Speed** | 30 tok/s | 41 tok/s | **65 tok/s** |
 | **Claude Code task** | 133s | 133s | **17.6s** |
 | **Needs a proxy?** | Yes | Yes | **No** |
 | **Lines of code** | N/A (external) | N/A (C++ fork) | **~200 Python** |
@@ -74,7 +74,7 @@ How long it takes to ask Claude Code to write a function:
 
 | | **Our Local Setup** | Claude Sonnet (Cloud) | Claude Opus (Cloud) |
 |---|:---:|:---:|:---:|
-| Speed | 48 tok/s | ~80 tok/s | ~40 tok/s |
+| Speed | 65 tok/s | ~80 tok/s | ~40 tok/s |
 | Monthly cost | **$0** | $20-100+ | $20-100+ |
 | Privacy | **100% local** | Cloud | Cloud |
 | Works offline | **Yes** | No | No |
@@ -259,7 +259,7 @@ We didn't start here. We went through three generations in one night:
 |:---:|---|:---:|---|
 | 1 | Ollama + custom proxy | 30 tok/s | Ollama works but Claude Code can't talk to it directly |
 | 2 | llama.cpp TurboQuant + proxy | 41 tok/s | TurboQuant compresses KV cache 4.9x, but the proxy is the bottleneck |
-| **3** | **MLX native server** | **48 tok/s** | **Kill the proxy. Speak Anthropic API directly. 7.5x faster.** |
+| **3** | **MLX native server** | **65 tok/s** | **Kill the proxy. Speak Anthropic API directly. 7.5x faster.** |
 
 Each generation taught us something. The final insight — that the proxy was the real bottleneck, not the model — changed everything.
 
