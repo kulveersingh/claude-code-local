@@ -2,10 +2,10 @@
 # Browser Agent — controls Brave with local AI
 # Double-click to launch
 
-CLAUDE_BIN="/Users/dtribe/.local/bin/claude"
+CLAUDE_BIN="$HOME/.local/bin/claude"
 BROWSER_PROMPT_FILE="$HOME/.claude/browser-agent-prompt.txt"
 BROWSER_MCP="$HOME/.claude/browser-use-mcp.json"
-PROXY="/Users/dtribe/.local/claude-local-proxy/proxy.py"
+PROXY="$HOME/.local/claude-local-proxy/proxy.py"
 
 # Ensure Ollama is running
 if ! pgrep -x "ollama" >/dev/null 2>&1; then

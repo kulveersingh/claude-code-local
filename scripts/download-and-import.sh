@@ -1,7 +1,7 @@
 #!/bin/bash
 # Auto-resuming download + Ollama import for Qwen 3.5 122B
 # Run with: bash ~/qwen3.5-122b/download-and-import.sh
-cd /Users/dtribe/qwen3.5-122b
+cd "$HOME/qwen3.5-122b"
 
 BASE="https://huggingface.co/unsloth/Qwen3.5-122B-A10B-GGUF/resolve/main/Q4_K_M"
 

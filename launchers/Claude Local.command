@@ -3,9 +3,9 @@
 # Double-click to launch
 # MLX Native Server — direct Anthropic API, no proxy needed
 
-CLAUDE_BIN="/Users/dtribe/.local/bin/claude"
-MLX_SERVER="/Users/dtribe/.local/mlx-native-server/server.py"
-MLX_PYTHON="/Users/dtribe/.local/mlx-server/bin/python3"
+CLAUDE_BIN="$HOME/.local/bin/claude"
+MLX_SERVER="$HOME/.local/mlx-native-server/server.py"
+MLX_PYTHON="$HOME/.local/mlx-server/bin/python3"
 
 # Start MLX server if not running
 if ! lsof -i :4000 >/dev/null 2>&1; then
